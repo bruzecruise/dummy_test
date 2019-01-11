@@ -3,12 +3,40 @@ from Bio import SeqIO
 
 # load full COI file
 full = open("COI_dataset.fasta", "r")
+outfile = open("COI_fixed.fasta", "w")
+
+search_tex = r'TH_'
+replace_tex = r'TH'
+
+for line in full:
+    line = line.strip()
+    if ">" in line:
+        line = re.sub(search_tex, replace_tex, line)
+        outfile.write(line + "\n")
+    else:
+        outfile.write(line + "\n")
+outfile.close()
+
+full = open("COI_fixed.fasta", "r")
 
 # load partial H3 file
 h3 = open("6-gene_dataset_H3_aligned.fasta", "r")
+outfile = open("H3_pruned.fasta", "w")
 
-hits_dict = {}
+# remove header from mompha taxa (H3_ from H3 fasta)
+search_tex = r'H3_'
+replace_tex = r''
 
+for line in h3:
+    line = line.strip()
+    if ">" in line:
+        line = re.sub(search_tex, replace_tex, line)
+        outfile.write(line + "\n")
+    else:
+        outfile.write(line + "\n")
+outfile.close()
+
+# calc max length of file
 max_len = 0
 max_description = ""
 for record in SeqIO.parse("6-gene_dataset_H3_aligned.fasta", "fasta"):
@@ -19,25 +47,42 @@ for record in SeqIO.parse("6-gene_dataset_H3_aligned.fasta", "fasta"):
 print(max_description)
 print(max_len)
 
-# remove header from mompha taxa (H3_ from H3 fasta)
-search_tex = r'H3_'
-replace_tex = r''
-
-for line in h3:
-    line = line.strip()
-    if ">" in line:
-        line = re.sub(search_tex, replace_tex, line)
-        print(line)
-    else:
-        print(line)
-
-
 # string of Ns equal to max length
 string_val = "N" * max_len
 print string_val
 
 
+# load hits dict with h3 hits
+h3_prune = open("H3_pruned.fasta", "r")
 
+hits_dict = {}
+for line in h3_prune:
+    line = line.strip()
+    if ">" in line:
+        tax_id = line
+        hits_dict[tax_id] = 1
+
+# add dummy seqs
+outfile = open("test.fasta", "w")
+
+
+for line in full:
+    line = line.strip()
+    if ">" in line:
+        coi_tax = line
+        if coi_tax in hits_dict:
+            outfile.write(line + "\n")
+            outfile.write(next(full, '').strip() + "\n")
+        else:
+            outfile.write (line + "\n")
+            outfile.write(string_val + "\n")
+outfile.close()
+
+
+
+
+
+print("s P A C e")
 
 
         #line = re.sub(search_tex, replace_tex, line)
